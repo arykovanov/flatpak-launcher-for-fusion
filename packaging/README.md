@@ -185,3 +185,35 @@ make test
 The tests use temporary prefixes and fake installers; they do not install or
 exercise Autodesk Fusion. A real acceptance test still needs installation,
 browser sign-in, model open/save/export, rendering, and updating.
+
+## GitHub-hosted releases
+
+The `Build and publish release` GitHub Actions workflow performs release builds
+entirely on a GitHub-hosted Ubuntu runner. It starts from a clean repository
+checkout; files from a developer's local `build/` or `dist/` directory are
+never used.
+
+The workflow runs for a pushed semantic-version tag such as `v0.2.0`, or it can
+be started from the Actions page with **Run workflow** and the same tag as its
+input. The tag must exactly match the version in `packaging/changelog`.
+
+For example:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The runner installs the pinned Flatpak runtime, runs the tests and metadata
+validators, executes `make clean` followed by `make all`, and verifies
+`SHA256SUMS`. It then publishes these assets to the GitHub Release:
+
+- `CADWineLauncher.flatpak`
+- `cad-wine-launcher_0.2.0_amd64.deb`
+- `CADWineLauncher-0.2.0-sources.tar.gz`
+- `SHA256SUMS`
+
+GitHub also generates its standard source-code `.zip` and `.tar.gz` archives
+for the release tag. The project source archive above is still included because
+it carries the corresponding source and license material for the bundled free
+software components.

@@ -1,0 +1,159 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag matching the package version, for example v0.2.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build on GitHub runner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    outputs:
+      release_tag: ${{ steps.release.outputs.tag }}
+      package_version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            appstream \
+            desktop-file-utils \
+            dpkg-dev \
+            flatpak \
+            flatpak-builder \
+            librsvg2-bin
+          flatpak remote-add --user --if-not-exists flathub \
+            https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub \
+            org.freedesktop.Platform//25.08 \
+            org.freedesktop.Sdk//25.08
+
+      - name: Validate release tag
+        id: release
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: |
+          package_version=$(dpkg-parsechangelog -lpackaging/changelog -S Version)
+          expected_tag="v${package_version}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            release_tag=${REQUESTED_TAG}
+          else
+            release_tag=${GITHUB_REF_NAME}
+          fi
+          if [[ ! ${release_tag} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            printf 'Invalid release tag: %s\n' "${release_tag}" >&2
+            exit 1
+          fi
+          if [[ ${release_tag} != "${expected_tag}" ]]; then
+            printf 'Release tag %s does not match package version %s.\n' \
+              "${release_tag}" "${package_version}" >&2
+            exit 1
+          fi
+          printf 'tag=%s\n' "${release_tag}" >> "${GITHUB_OUTPUT}"
+          printf 'version=%s\n' "${package_version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Validate source metadata and tests
+        run: |
+          make test
+          appstreamcli validate --no-net \
+            flatpak/org.community.CADWineLauncher.metainfo.xml
+          desktop-file-validate \
+            packaging/cad-wine-launcher.desktop \
+            packaging/cad-wine-launcher-callback.desktop \
+            flatpak/org.community.CADWineLauncher.desktop \
+            flatpak/org.community.CADWineLauncher.Callback.desktop
+
+      - name: Build release artifacts from a clean tree
+        run: |
+          make clean
+          make all
+
+      - name: Verify release artifacts
+        env:
+          PACKAGE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          test -s dist/CADWineLauncher.flatpak
+          test -s "dist/cad-wine-launcher_${PACKAGE_VERSION}_amd64.deb"
+          test -s "dist/CADWineLauncher-${PACKAGE_VERSION}-sources.tar.gz"
+          test -s dist/SHA256SUMS
+          sha256sum --check dist/SHA256SUMS
+          if find dist -type f -iname '*.exe' -print -quit | grep -q .; then
+            printf 'A proprietary executable was found in dist/.\n' >&2
+            exit 1
+          fi
+
+      - name: Upload runner-built artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ steps.release.outputs.tag }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            dist/CADWineLauncher.flatpak
+            dist/cad-wine-launcher_${{ steps.release.outputs.version }}_amd64.deb
+            dist/CADWineLauncher-${{ steps.release.outputs.version }}-sources.tar.gz
+            dist/SHA256SUMS
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download runner-built artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release-${{ needs.build.outputs.release_tag }}
+          path: dist
+
+      - name: Verify downloaded artifacts
+        run: sha256sum --check dist/SHA256SUMS
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.release_tag }}
+          PACKAGE_VERSION: ${{ needs.build.outputs.package_version }}
+        run: |
+          assets=(
+            dist/CADWineLauncher.flatpak
+            "dist/cad-wine-launcher_${PACKAGE_VERSION}_amd64.deb"
+            "dist/CADWineLauncher-${PACKAGE_VERSION}-sources.tar.gz"
+            dist/SHA256SUMS
+          )
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release upload "${RELEASE_TAG}" "${assets[@]}" --clobber
+          else
+            gh release create "${RELEASE_TAG}" "${assets[@]}" \
+              --target "${GITHUB_SHA}" \
+              --title "Community CAD Launcher for Autodesk Fusion ${RELEASE_TAG}" \
+              --generate-notes
+          fi

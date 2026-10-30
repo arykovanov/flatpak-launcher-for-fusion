@@ -341,6 +341,21 @@ class PackagingTests(unittest.TestCase):
             self.assertIn("do not need to", text)
             self.assertIn("Wine manually", text)
 
+    def test_release_workflow_builds_and_publishes_on_github_runner(self):
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        self.assertIn("runs-on: ubuntu-24.04", workflow)
+        self.assertNotIn("self-hosted", workflow)
+        self.assertIn("make clean", workflow)
+        self.assertIn("make all", workflow)
+        self.assertIn("sha256sum --check dist/SHA256SUMS", workflow)
+        self.assertIn("gh release create", workflow)
+        for artifact in (
+                "CADWineLauncher.flatpak",
+                "cad-wine-launcher_${{ steps.release.outputs.version }}_amd64.deb",
+                "CADWineLauncher-${{ steps.release.outputs.version }}-sources.tar.gz",
+                "SHA256SUMS"):
+            self.assertIn(artifact, workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
