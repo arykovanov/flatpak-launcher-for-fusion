@@ -329,6 +329,18 @@ class PackagingTests(unittest.TestCase):
         self.assertIn(f"Copyright: 2026 {maintainer}", copyright_text)
         self.assertIn("<name>Alexander Rykovanov</name>", metainfo)
 
+    def test_readme_documents_manual_autodesk_download(self):
+        for path in (ROOT / "README.md", ROOT / "packaging/README.md"):
+            text = path.read_text()
+            self.assertIn("Sign in to the [Autodesk Account]", text)
+            self.assertIn("accept Autodesk's applicable user agreement", text)
+            self.assertIn("select the downloaded installer", text)
+            self.assertIn("does not", text)
+            self.assertIn("automatically fetch the Fusion installer", text)
+            self.assertIn("complete, preconfigured", text)
+            self.assertIn("do not need to", text)
+            self.assertIn("Wine manually", text)
+
 
 if __name__ == "__main__":
     unittest.main()

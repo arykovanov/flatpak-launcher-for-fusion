@@ -12,6 +12,33 @@ have a valid entitlement.
 Autodesk and Autodesk Fusion are trademarks of the Autodesk group of
 companies. Community CAD Launcher is not affiliated with Autodesk.
 
+## Why installation is not fully automatic
+
+Installation deliberately requires a few manual steps:
+
+1. Sign in to the [Autodesk Account](https://manage.autodesk.com/) associated
+   with your Fusion entitlement.
+2. Review and accept Autodesk's applicable user agreement and download terms.
+3. Download the Windows Autodesk Fusion installer from your account.
+4. Start this launcher and select the downloaded installer when prompted.
+
+This is less convenient than a one-click installation, but it is intentional.
+Autodesk Fusion is proprietary software supplied through Autodesk's account,
+license-entitlement, and terms-acceptance process. This independent project
+cannot grant those rights on Autodesk's behalf, so it does not include, mirror,
+or automatically fetch the Fusion installer. Requiring the account holder to
+obtain and select the installer avoids bypassing that process and keeps
+Autodesk software outside this GPL-licensed package. After you select the
+installer, the launcher runs it in its private Wine environment.
+
+Although obtaining the Autodesk installer is manual, the Linux compatibility
+environment is not. The package provides a complete, preconfigured environment
+for running Fusion: patched Wine, an isolated Wine prefix, required helper
+tools and prerequisites, sign-in callback integration, and the shared `H:`
+drive. You do not need to install, configure, or tune Wine manually. This does
+not make Linux an officially supported Autodesk platform or guarantee that
+every Fusion feature will work on every system.
+
 Build all artifacts with:
 
 ```bash
@@ -26,6 +53,9 @@ xdg-mime default org.community.CADWineLauncher.Callback.desktop \
   x-scheme-handler/adskidmgr
 flatpak run org.community.CADWineLauncher
 ```
+
+On first run, follow the manual Autodesk download workflow described above and
+select the downloaded `.exe` file in the launcher's file chooser.
 
 The launcher, packaging code, and original artwork are licensed under the
 [GNU General Public License version 3 or later](LICENSE). Bundled third-party

@@ -20,6 +20,40 @@ an Autodesk-supported Fusion platform.
 The launcher, packaging code, and original artwork are GPL-3.0-or-later.
 Bundled third-party components retain their respective licenses.
 
+## Why the Fusion installer must be downloaded manually
+
+This package cannot provide a completely unattended, one-click Fusion
+installation. Before the launcher can install Fusion, you must:
+
+1. Sign in to the [Autodesk Account](https://manage.autodesk.com/) associated
+   with your Fusion entitlement.
+2. Review and accept Autodesk's applicable user agreement and download terms.
+3. Find Fusion under Products and Services and download its Windows installer.
+4. Run this launcher and select the downloaded installer in the file chooser.
+
+The extra steps are inconvenient, but they are a deliberate licensing
+boundary. Autodesk Fusion is proprietary software, and Autodesk controls
+installer access through its account, entitlement, and terms-acceptance flow.
+This independent GPL-licensed project cannot accept those terms or establish
+an entitlement for you. It therefore does not bundle, redistribute, mirror, or
+automatically fetch the Fusion installer. Automating that acquisition would
+bypass the user-facing Autodesk flow and could retrieve or redistribute
+proprietary software without clear authorization.
+
+After you select the installer, the launcher automates the supported portion:
+it prepares the private Wine prefix, installs prerequisites, runs the selected
+installer, and configures the launcher integration. Autodesk may still require
+interactive sign-in or agreement prompts during installation and first launch.
+
+The package otherwise provides a complete, preconfigured compatibility
+environment for running Fusion. It includes patched Wine, an isolated Wine
+prefix, the required helper tools and prerequisites, browser sign-in callback
+integration, and a shared `H:` drive for model files. Users do not need to
+install, configure, or tune Wine manually. “Complete environment” describes
+what the package configures; it is not a guarantee that every Fusion feature
+works on every system, and Autodesk does not officially support this Linux
+configuration.
+
 ## Build everything
 
 On x86-64 Debian/Ubuntu, install Flatpak build tooling and the runtime:
@@ -54,7 +88,7 @@ flatpak run org.community.CADWineLauncher
 
 On first run, the launcher displays its unofficial status, links Autodesk's
 terms, asks you to confirm both acceptance and a valid entitlement, then opens
-a file chooser. For legal and licensing reasons, you must sign in to your
+a file chooser. As explained above, for legal and licensing reasons you must sign in to your
 [Autodesk Account](https://manage.autodesk.com/), download the Windows
 installer yourself, and then select that file. The package contains no
 Autodesk download URL. For an explicit terminal setup:
