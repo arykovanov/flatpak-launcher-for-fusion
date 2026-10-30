@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.community.CADWineLauncher</id>
+  <name>Community CAD Launcher</name>
+  <summary>Community CAD launcher for use with Autodesk Fusion</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <url type="homepage">https://codeberg.org/Lolig4/Autodesk-Fusion-360-on-Linux</url>
+  <developer id="com.gmail.rykovanov.as"><name>Alexander Rykovanov</name></developer>
+  <description>
+    <p>An independent community launcher that runs Autodesk Fusion with a bundled Wine runtime. It is unofficial and is not affiliated with, endorsed by, or supported by Autodesk, Inc.</p>
+    <p>Autodesk Fusion is not included or downloaded by this package. For legal and licensing reasons, the user must sign in to their Autodesk Account and download the installer themselves, accept Autodesk's terms, and have a valid entitlement. Microsoft prerequisites are downloaded separately under their own terms.</p>
+    <p>Autodesk and Autodesk Fusion are trademarks of the Autodesk group of companies. Community CAD Launcher is not affiliated with Autodesk. The icon is an original community icon and is not an Autodesk product icon or logo.</p>
+    <p>The dedicated host folder ~/.autodesk_fusion is available inside Wine as drive H: for exchanging model files without exposing the rest of the home directory.</p>
+  </description>
+  <launchable type="desktop-id">org.community.CADWineLauncher.desktop</launchable>
+  <provides><mediatype>x-scheme-handler/adskidmgr</mediatype></provides>
+  <releases><release version="0.2.0" date="2026-10-30"/></releases>
+  <content_rating type="oars-1.1"/>
+</component>

@@ -1,0 +1,48 @@
+.TH CAD-WINE-LAUNCHER 1 "October 2026" "cad-wine-launcher 0.2.0"
+.SH NAME
+cad-wine-launcher \- Community CAD Launcher for Autodesk Fusion
+.SH SYNOPSIS
+.B cad-wine-launcher
+.RI [ options ]
+.RI [ -- " application arguments" ]
+.SH DESCRIPTION
+Runs a user-supplied Autodesk Fusion installer in a private Wine prefix and
+launches the installed application. Autodesk Fusion is not included or
+downloaded by this package. The launcher is unofficial and unaffiliated with
+Autodesk, Inc. The user must accept Autodesk's terms and have a valid entitlement.
+.SH OPTIONS
+.TP
+.B --install
+Install without launching Fusion.
+.TP
+.BI --installer " PATH"
+Use an installer obtained directly by the user from Autodesk.
+.TP
+.B --accept-autodesk-terms
+Confirm non-interactively that Autodesk's terms were reviewed and accepted and
+that the user has a valid entitlement.
+.TP
+.B --update
+Update Fusion with a user-selected Autodesk installer.
+.TP
+.B --status
+Report installation status without making changes.
+.TP
+.B --dry-run
+Print configured paths and download sources without making changes.
+.TP
+.B --debug
+Show application output and Wine diagnostics.
+.TP
+.B --help
+Show usage.
+.SH FILES
+Data and logs are stored beneath the XDG data directory in cad-wine-launcher.
+Downloads are stored beneath the XDG cache directory in cad-wine-launcher.
+Flatpak redirects these directories into its private application storage.
+The host directory ~/.autodesk_fusion is mapped to Wine drive H: for model
+exchange and is intentionally outside the Flatpak's private application data.
+.SH EXIT STATUS
+Status exits zero when installed and one otherwise. Setup exits zero when
+installation files are present and one on failure. Launches preserve the
+Wine process exit status. This does not verify CAD operation.

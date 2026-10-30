@@ -1,0 +1,27 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Community CAD Launcher for Autodesk Fusion
+
+Files: *
+Copyright: 2026 Alexander Rykovanov <rykovanov.as@gmail.com>
+License: GPL-3+
+ This program is free software: you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your option) any later
+ version.
+ .
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ .
+ The complete license text is installed as LICENSE and is also available on
+ Debian systems in /usr/share/common-licenses/GPL-3.
+
+Comment:
+ This package contains only the launcher and integration files. It is an
+ unofficial independent project and is not affiliated with, endorsed by, or
+ supported by Autodesk, Inc. Autodesk Fusion is proprietary software and is
+ neither included nor downloaded by this Debian archive; the user must obtain
+ it from Autodesk and comply with Autodesk's terms. Wine, Winetricks, and the
+ other free-software components remain subject to their respective licenses.
+ Autodesk and Autodesk Fusion are trademarks of the Autodesk group of
+ companies. Community CAD Launcher is not affiliated with Autodesk.

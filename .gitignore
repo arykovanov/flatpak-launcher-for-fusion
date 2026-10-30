@@ -1,0 +1,5 @@
+fusion360-diagnostic.*.log
+/*.exe
+/build/
+/dist/
+__pycache__/

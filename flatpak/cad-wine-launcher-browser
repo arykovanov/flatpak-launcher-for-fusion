@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+set -euo pipefail
+# Open links through the desktop portal for Community CAD Launcher.
+# The Freedesktop runtime's xdg-open uses the OpenURI desktop portal.
+case "${1:-}" in
+    https://*|http://*) exec /usr/bin/xdg-open "$1" ;;
+    *) printf 'Unsupported browser URL.\n' >&2; exit 1 ;;
+esac

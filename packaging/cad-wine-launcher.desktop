@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Community CAD Launcher for Autodesk Fusion
+Comment=Unofficial community launcher for use with Autodesk Fusion
+Exec=cad-wine-launcher
+Icon=cad-wine-launcher
+Terminal=true
+Categories=Graphics;3DGraphics;Engineering;
+Keywords=CAD;CAM;Wine;Fusion;
+StartupNotify=false

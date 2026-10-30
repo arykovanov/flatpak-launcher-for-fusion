@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Community CAD Launcher for Autodesk Fusion sign-in callback
+Exec=cad-wine-launcher --callback %u
+Icon=cad-wine-launcher
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/adskidmgr;

@@ -1,0 +1,6 @@
+<!-- Original community cube icon; not an Autodesk logo or product icon. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect x="4" y="4" width="120" height="120" rx="24" fill="#253448"/>
+  <path d="m64 21 37 21v44l-37 21-37-21V42z" fill="none" stroke="#ed9b36" stroke-width="8" stroke-linejoin="round"/>
+  <path d="m28 43 36 21 36-21M64 64v42" fill="none" stroke="#ed9b36" stroke-width="7" stroke-linejoin="round"/>
+</svg>

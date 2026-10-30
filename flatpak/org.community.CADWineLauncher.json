@@ -1,0 +1,111 @@
+{
+  "app-id": "org.community.CADWineLauncher",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "25.08",
+  "sdk": "org.freedesktop.Sdk",
+  "command": "cad-wine-launcher",
+  "separate-locales": false,
+  "build-options": {"no-debuginfo": true},
+  "finish-args": [
+    "--share=network",
+    "--share=ipc",
+    "--socket=x11",
+    "--socket=pulseaudio",
+    "--device=dri",
+    "--allow=multiarch",
+    "--filesystem=~/.autodesk_fusion:create"
+  ],
+  "modules": [
+    {
+      "name": "cabextract",
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://deb.debian.org/debian/pool/main/c/cabextract/cabextract_1.11.orig.tar.gz",
+          "sha256": "b5546db1155e4c718ff3d4b278573604f30dd64c3c5bfd4657cd089b823a3ac6"
+        }
+      ],
+      "cleanup": ["/share/man"]
+    },
+    {
+      "name": "7zip",
+      "buildsystem": "simple",
+      "subdir": "CPP/7zip/Bundles/Alone2",
+      "build-commands": [
+        "make -j $FLATPAK_BUILDER_N_JOBS -f makefile.gcc",
+        "install -Dm755 _o/7zz /app/bin/7zz",
+        "ln -s 7zz /app/bin/7z",
+        "ln -s 7zz /app/bin/7za"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/ip7z/7zip.git",
+          "commit": "b88c6bc09339de32f7d18bbab900686b244f42ba"
+        }
+      ]
+    },
+    {
+      "name": "fusion-wine",
+      "buildsystem": "simple",
+      "build-commands": [
+        "mkdir -p /app/opt",
+        "cp -a fusion-wine-build /app/opt/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/Lolig4/Autodesk-Fusion-360-for-Linux/releases/download/Pre_Build_Wine%2FProton_01.06.26/fusion-wine-build.tar.gz",
+          "sha256": "65812663c11a3221d6f4e63644afc4925446dd8ca8263bcdc1c3cdc56a1aa985",
+          "strip-components": 0
+        }
+      ]
+    },
+    {
+      "name": "winetricks",
+      "buildsystem": "simple",
+      "build-commands": ["install -Dm755 winetricks /app/bin/winetricks"],
+      "sources": [
+        {
+          "type": "file",
+          "url": "https://raw.githubusercontent.com/Winetricks/winetricks/f3890f670867b5ffbc3938726db45c0f7d16c8ba/src/winetricks",
+          "sha256": "672a1ff4442e8691a3ffc0e6860137e201a1d1227e9b3044245f1731e9e9837e",
+          "dest-filename": "winetricks"
+        }
+      ]
+    },
+    {
+      "name": "fusion-bootstrapper",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm755 fusion360.py /app/lib/cad-wine-launcher/launcher.py",
+        "install -Dm644 sources.json /app/lib/cad-wine-launcher/sources.json",
+        "ln -s ../lib/cad-wine-launcher/launcher.py /app/bin/cad-wine-launcher",
+        "install -Dm755 cad-wine-launcher-browser /app/bin/cad-wine-launcher-browser",
+        "install -Dm644 org.community.CADWineLauncher.desktop /app/share/applications/org.community.CADWineLauncher.desktop",
+        "install -Dm644 org.community.CADWineLauncher.Callback.desktop /app/share/applications/org.community.CADWineLauncher.Callback.desktop",
+        "install -Dm644 org.community.CADWineLauncher.metainfo.xml /app/share/metainfo/org.community.CADWineLauncher.metainfo.xml",
+        "rsvg-convert -w 64 -h 64 org.community.CADWineLauncher.svg -o icon-64.png",
+        "rsvg-convert -w 128 -h 128 org.community.CADWineLauncher.svg -o icon-128.png",
+        "install -Dm644 icon-64.png /app/share/icons/hicolor/64x64/apps/org.community.CADWineLauncher.png",
+        "install -Dm644 icon-128.png /app/share/icons/hicolor/128x128/apps/org.community.CADWineLauncher.png",
+        "install -Dm644 copyright /app/share/doc/cad-wine-launcher/copyright",
+        "mkdir -p /app/share/licenses/cad-wine-launcher",
+        "install -Dm644 LICENSE /app/share/licenses/cad-wine-launcher/LICENSE",
+        "cp -a licenses/. /app/share/licenses/cad-wine-launcher/"
+      ],
+      "sources": [
+        {"type": "file", "path": "../packaging/fusion360.py"},
+        {"type": "file", "path": "../packaging/sources.json"},
+        {"type": "file", "path": "../packaging/copyright"},
+        {"type": "file", "path": "../LICENSE"},
+        {"type": "file", "path": "cad-wine-launcher-browser"},
+        {"type": "file", "path": "org.community.CADWineLauncher.desktop"},
+        {"type": "file", "path": "org.community.CADWineLauncher.Callback.desktop"},
+        {"type": "file", "path": "org.community.CADWineLauncher.metainfo.xml"},
+        {"type": "file", "path": "org.community.CADWineLauncher.svg"},
+        {"type": "dir", "path": "licenses", "dest": "licenses"}
+      ]
+    }
+  ]
+}

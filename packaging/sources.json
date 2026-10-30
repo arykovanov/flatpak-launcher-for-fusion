@@ -1,0 +1,14 @@
+{
+  "wine": {
+    "version": "fusion-wine-2026-06-01",
+    "url": "https://github.com/Lolig4/Autodesk-Fusion-360-for-Linux/releases/download/Pre_Build_Wine%2FProton_01.06.26/fusion-wine-build.tar.gz",
+    "sha256": "65812663c11a3221d6f4e63644afc4925446dd8ca8263bcdc1c3cdc56a1aa985"
+  },
+  "winetricks": {
+    "url": "https://raw.githubusercontent.com/Winetricks/winetricks/f3890f670867b5ffbc3938726db45c0f7d16c8ba/src/winetricks",
+    "sha256": "672a1ff4442e8691a3ffc0e6860137e201a1d1227e9b3044245f1731e9e9837e"
+  },
+  "webview2": {
+    "url": "https://go.microsoft.com/fwlink/?linkid=2124701"
+  }
+}

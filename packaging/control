@@ -1,0 +1,16 @@
+Package: cad-wine-launcher
+Version: 0.2.0
+Section: contrib/graphics
+Priority: optional
+Architecture: amd64
+Maintainer: Alexander Rykovanov <rykovanov.as@gmail.com>
+Depends: ca-certificates, cabextract, curl, desktop-file-utils, fonts-liberation, libc6 (>= 2.38), libfontconfig1, libfreetype6, libgcc-s1, libgl1, libgnutls30t64 | libgnutls30, libgstreamer1.0-0, libgstreamer-plugins-base1.0-0, libpulse0, libudev1, libunwind8, libvulkan1, libx11-6, libxcomposite1, libxcursor1, libxext6, libxi6, libxinerama1, libxrandr2, libxrender1, p7zip-full | 7zip, python3 (>= 3.12), unzip, x11-utils, xdg-utils, xterm
+Recommends: mesa-vulkan-drivers, winbind
+Description: Community CAD launcher for Autodesk Fusion
+ Downloads a pinned community Wine runtime and runs an Autodesk Fusion
+ installer selected by the user. Requires acceptance of Autodesk's terms,
+ an Autodesk account, and a valid entitlement. This independent launcher is
+ not affiliated with, endorsed by, or supported by Autodesk, Inc.
+ .
+ Autodesk software is neither included nor downloaded by this package.
+ Host libraries are managed by APT; this package is not a sandbox.
