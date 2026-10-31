@@ -9,6 +9,11 @@ fi
 output=${1:-"$root/dist"}
 mkdir -p -- "$output" "$root/build/source-downloads"
 output=$(cd -- "$output" && pwd)
+version=$(sed -n 's/^Version: //p' "$root/packaging/control")
+[[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    printf 'Invalid package version: %s\n' "$version" >&2
+    exit 1
+}
 downloads="$root/build/source-downloads"
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT
@@ -64,7 +69,7 @@ install -Dm644 "$root/flatpak/org.community.CADWineLauncher.metainfo.xml" "$stag
 install -Dm644 "$root/flatpak/org.community.CADWineLauncher.svg" "$stage/launcher/org.community.CADWineLauncher.svg"
 cp -a -- "$root/flatpak/licenses" "$stage/launcher/licenses"
 
-archive="$output/CADWineLauncher-0.2.0-sources.tar.gz"
+archive="$output/cad-wine-launcher_${version}_sources.tar.gz"
 tar --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
     -czf "$archive" -C "$stage" .
 printf 'Built %s\n' "$archive"

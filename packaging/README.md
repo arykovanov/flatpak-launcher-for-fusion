@@ -69,9 +69,9 @@ make
 
 The default `all` target builds:
 
-- `dist/CADWineLauncher.flatpak`
-- `dist/cad-wine-launcher_0.2.0_amd64.deb`
-- `dist/CADWineLauncher-0.2.0-sources.tar.gz`
+- `dist/cad-wine-launcher_0.3.0_x86_64.flatpak`
+- `dist/cad-wine-launcher_0.3.0_amd64.deb`
+- `dist/cad-wine-launcher_0.3.0_sources.tar.gz`
 
 `make clean` removes only this project's generated `build/` and `dist/`
 directories. Individual targets are `make flatpak`, `make deb`,
@@ -80,17 +80,24 @@ directories. Individual targets are `make flatpak`, `make deb`,
 ## Install the Flatpak file
 
 ```bash
-flatpak install --user ./dist/CADWineLauncher.flatpak
+flatpak install --user ./dist/cad-wine-launcher_0.3.0_x86_64.flatpak
+flatpak run org.community.CADWineLauncher
+```
+
+These two commands are sufficient on desktops that automatically select the
+included `adskidmgr` URL handler. If the browser completes authentication but
+does not return to Fusion, register the callback once on the host:
+
+```bash
 xdg-mime default org.community.CADWineLauncher.Callback.desktop \
   x-scheme-handler/adskidmgr
-flatpak run org.community.CADWineLauncher
 ```
 
 On first run, the launcher displays its unofficial status, links Autodesk's
 terms, asks you to confirm both acceptance and a valid entitlement, then opens
-a file chooser. As explained above, for legal and licensing reasons you must sign in to your
-[Autodesk Account](https://manage.autodesk.com/), download the Windows
-installer yourself, and then select that file. The package contains no
+a file chooser. As explained above, for legal and licensing reasons you must
+sign in to your [Autodesk Account](https://manage.autodesk.com/), download the
+Windows installer yourself, and then select that file. The package contains no
 Autodesk download URL. For an explicit terminal setup:
 
 ```bash
@@ -155,7 +162,7 @@ Do not substitute a broader `.var/app` path in the removal command.
 ## Debian alternative
 
 ```bash
-sudo apt install ./dist/cad-wine-launcher_0.2.0_amd64.deb
+sudo apt install ./dist/cad-wine-launcher_0.3.0_amd64.deb
 cad-wine-launcher
 ```
 
@@ -193,24 +200,28 @@ entirely on a GitHub-hosted Ubuntu runner. It starts from a clean repository
 checkout; files from a developer's local `build/` or `dist/` directory are
 never used.
 
-The workflow runs for a pushed semantic-version tag such as `v0.2.0`, or it can
+The workflow runs for a pushed semantic-version tag such as `v0.3.0`, or it can
 be started from the Actions page with **Run workflow** and the same tag as its
 input. The tag must exactly match the version in `packaging/changelog`.
+The tagged commit must already be present on the repository's default branch;
+GitHub will reject release creation when a tag points to an unpushed commit
+that adds or changes workflow files.
 
 For example:
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+git push origin main
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 The runner installs the pinned Flatpak runtime, runs the tests and metadata
 validators, executes `make clean` followed by `make all`, and verifies
 `SHA256SUMS`. It then publishes these assets to the GitHub Release:
 
-- `CADWineLauncher.flatpak`
-- `cad-wine-launcher_0.2.0_amd64.deb`
-- `CADWineLauncher-0.2.0-sources.tar.gz`
+- `cad-wine-launcher_0.3.0_x86_64.flatpak`
+- `cad-wine-launcher_0.3.0_amd64.deb`
+- `cad-wine-launcher_0.3.0_sources.tar.gz`
 - `SHA256SUMS`
 
 GitHub also generates its standard source-code `.zip` and `.tar.gz` archives

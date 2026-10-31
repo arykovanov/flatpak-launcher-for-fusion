@@ -15,6 +15,8 @@
   </description>
   <launchable type="desktop-id">org.community.CADWineLauncher.desktop</launchable>
   <provides><mediatype>x-scheme-handler/adskidmgr</mediatype></provides>
-  <releases><release version="0.2.0" date="2026-10-30"/></releases>
+  <releases>
+    <release version="0.3.0" date="2026-10-31"/>
+  </releases>
   <content_rating type="oars-1.1"/>
 </component>

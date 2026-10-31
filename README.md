@@ -48,14 +48,21 @@ make
 Install the Flatpak bundle with:
 
 ```bash
-flatpak install --user ./dist/CADWineLauncher.flatpak
-xdg-mime default org.community.CADWineLauncher.Callback.desktop \
-  x-scheme-handler/adskidmgr
+flatpak install --user ./dist/cad-wine-launcher_0.3.0_x86_64.flatpak
 flatpak run org.community.CADWineLauncher
 ```
 
 On first run, follow the manual Autodesk download workflow described above and
 select the downloaded `.exe` file in the launcher's file chooser.
+
+Most desktops register the included sign-in callback automatically. If the web
+browser does not return to Fusion after authentication, register the callback
+once on the host:
+
+```bash
+xdg-mime default org.community.CADWineLauncher.Callback.desktop \
+  x-scheme-handler/adskidmgr
+```
 
 The launcher, packaging code, and original artwork are licensed under the
 [GNU General Public License version 3 or later](LICENSE). Bundled third-party

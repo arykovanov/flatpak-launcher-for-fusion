@@ -2,6 +2,8 @@
 
 .DEFAULT_GOAL := all
 
+VERSION := $(shell sed -n 's/^Version: //p' packaging/control)
+
 .PHONY: all flatpak deb source-bundle checksums test clean
 
 all: checksums
@@ -17,9 +19,9 @@ source-bundle:
 
 checksums: flatpak deb source-bundle
 	sha256sum \
-		dist/CADWineLauncher.flatpak \
-		dist/cad-wine-launcher_0.2.0_amd64.deb \
-		dist/CADWineLauncher-0.2.0-sources.tar.gz \
+		dist/cad-wine-launcher_$(VERSION)_x86_64.flatpak \
+		dist/cad-wine-launcher_$(VERSION)_amd64.deb \
+		dist/cad-wine-launcher_$(VERSION)_sources.tar.gz \
 		> dist/SHA256SUMS
 
 test:

@@ -1,9 +1,9 @@
-cad-wine-launcher (0.2.0) unstable; urgency=medium
+cad-wine-launcher (0.3.0) unstable; urgency=medium
 
-  * Use an independent name, identity, and original community icon.
-  * Require a user-supplied Autodesk installer and explicit terms and
-    entitlement confirmation; do not embed an Autodesk installer URL.
-  * Remove temporary proprietary installer copies after successful setup.
-  * Document exact corresponding sources for bundled free software.
+  * Provide a complete preconfigured Flatpak Wine environment.
+  * Require the user to obtain Autodesk Fusion through Autodesk's account and
+    terms flow, while automating the Wine-side installation.
+  * Add the shared H: drive and GitHub-hosted release workflow.
+  * Use lowercase, versioned release artifact filenames.
 
- -- Alexander Rykovanov <rykovanov.as@gmail.com>  Fri, 30 Oct 2026 12:00:00 +0400
+ -- Alexander Rykovanov <rykovanov.as@gmail.com>  Sat, 31 Oct 2026 12:00:00 +0400

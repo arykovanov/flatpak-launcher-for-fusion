@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag matching the package version, for example v0.2.0
+        description: Release tag matching the package version, for example v0.3.0
         required: true
         type: string
 
@@ -34,30 +34,12 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Install build dependencies
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            appstream \
-            desktop-file-utils \
-            dpkg-dev \
-            flatpak \
-            flatpak-builder \
-            librsvg2-bin
-          flatpak remote-add --user --if-not-exists flathub \
-            https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install --user --noninteractive flathub \
-            org.freedesktop.Platform//25.08 \
-            org.freedesktop.Sdk//25.08
-
       - name: Validate release tag
         id: release
         env:
           REQUESTED_TAG: ${{ inputs.tag }}
         run: |
-          package_version=$(dpkg-parsechangelog -lpackaging/changelog -S Version)
+          package_version=$(sed -n 's/^Version: //p' packaging/control)
           expected_tag="v${package_version}"
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             release_tag=${REQUESTED_TAG}
@@ -75,6 +57,38 @@ jobs:
           fi
           printf 'tag=%s\n' "${release_tag}" >> "${GITHUB_OUTPUT}"
           printf 'version=%s\n' "${package_version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Require release commit on default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch --no-tags origin \
+            "refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
+          if ! git merge-base --is-ancestor \
+              "${GITHUB_SHA}" "refs/remotes/origin/${DEFAULT_BRANCH}"; then
+            printf '%s\n' \
+              "Release commit ${GITHUB_SHA} is not on origin/${DEFAULT_BRANCH}." \
+              "Push the default branch before creating or pushing its release tag." >&2
+            exit 1
+          fi
+
+      - name: Install build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            appstream \
+            desktop-file-utils \
+            dpkg-dev \
+            flatpak \
+            flatpak-builder \
+            librsvg2-bin
+          flatpak remote-add --user --if-not-exists flathub \
+            https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub \
+            org.freedesktop.Platform//25.08 \
+            org.freedesktop.Sdk//25.08
 
       - name: Validate source metadata and tests
         run: |
@@ -96,9 +110,9 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          test -s dist/CADWineLauncher.flatpak
+          test -s "dist/cad-wine-launcher_${PACKAGE_VERSION}_x86_64.flatpak"
           test -s "dist/cad-wine-launcher_${PACKAGE_VERSION}_amd64.deb"
-          test -s "dist/CADWineLauncher-${PACKAGE_VERSION}-sources.tar.gz"
+          test -s "dist/cad-wine-launcher_${PACKAGE_VERSION}_sources.tar.gz"
           test -s dist/SHA256SUMS
           sha256sum --check dist/SHA256SUMS
           if find dist -type f -iname '*.exe' -print -quit | grep -q .; then
@@ -113,9 +127,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           path: |
-            dist/CADWineLauncher.flatpak
+            dist/cad-wine-launcher_${{ steps.release.outputs.version }}_x86_64.flatpak
             dist/cad-wine-launcher_${{ steps.release.outputs.version }}_amd64.deb
-            dist/CADWineLauncher-${{ steps.release.outputs.version }}-sources.tar.gz
+            dist/cad-wine-launcher_${{ steps.release.outputs.version }}_sources.tar.gz
             dist/SHA256SUMS
 
   release:
@@ -144,9 +158,9 @@ jobs:
           PACKAGE_VERSION: ${{ needs.build.outputs.package_version }}
         run: |
           assets=(
-            dist/CADWineLauncher.flatpak
+            "dist/cad-wine-launcher_${PACKAGE_VERSION}_x86_64.flatpak"
             "dist/cad-wine-launcher_${PACKAGE_VERSION}_amd64.deb"
-            "dist/CADWineLauncher-${PACKAGE_VERSION}-sources.tar.gz"
+            "dist/cad-wine-launcher_${PACKAGE_VERSION}_sources.tar.gz"
             dist/SHA256SUMS
           )
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then

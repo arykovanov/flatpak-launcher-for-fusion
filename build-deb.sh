@@ -10,6 +10,11 @@ fi
 output=${1:-"$root/dist"}
 mkdir -p -- "$output"
 output=$(cd -- "$output" && pwd)
+version=$(sed -n 's/^Version: //p' "$root/packaging/control")
+[[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    printf 'Invalid package version: %s\n' "$version" >&2
+    exit 1
+}
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT
 install -d "$stage/DEBIAN" "$stage/usr/bin" "$stage/usr/lib/cad-wine-launcher" \
@@ -30,4 +35,5 @@ gzip -n -9 -c "$root/packaging/cad-wine-launcher.1" > "$stage/usr/share/man/man1
 chmod -R u=rwX,go=rX "$stage"
 size=$(du -sk "$stage/usr" | cut -f1)
 printf 'Installed-Size: %s\n' "$size" >> "$stage/DEBIAN/control"
-dpkg-deb --build --root-owner-group "$stage" "$output/cad-wine-launcher_0.2.0_amd64.deb"
+dpkg-deb --build --root-owner-group "$stage" \
+    "$output/cad-wine-launcher_${version}_amd64.deb"

@@ -329,6 +329,19 @@ class PackagingTests(unittest.TestCase):
         self.assertIn(f"Copyright: 2026 {maintainer}", copyright_text)
         self.assertIn("<name>Alexander Rykovanov</name>", metainfo)
 
+    def test_release_version_and_artifact_names_are_consistent(self):
+        version = "0.3.0"
+        control = (ROOT / "packaging/control").read_text()
+        changelog = (ROOT / "packaging/changelog").read_text()
+        metainfo = (ROOT / "flatpak/org.community.CADWineLauncher.metainfo.xml").read_text()
+        makefile = (ROOT / "Makefile").read_text()
+        self.assertIn(f"Version: {version}", control)
+        self.assertTrue(changelog.startswith(f"cad-wine-launcher ({version})"))
+        self.assertIn(f'<release version="{version}"', metainfo)
+        self.assertIn("cad-wine-launcher_$(VERSION)_x86_64.flatpak", makefile)
+        self.assertIn("cad-wine-launcher_$(VERSION)_amd64.deb", makefile)
+        self.assertIn("cad-wine-launcher_$(VERSION)_sources.tar.gz", makefile)
+
     def test_readme_documents_manual_autodesk_download(self):
         for path in (ROOT / "README.md", ROOT / "packaging/README.md"):
             text = path.read_text()
@@ -349,10 +362,12 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("make all", workflow)
         self.assertIn("sha256sum --check dist/SHA256SUMS", workflow)
         self.assertIn("gh release create", workflow)
+        self.assertIn("git merge-base --is-ancestor", workflow)
+        self.assertIn("Push the default branch before", workflow)
         for artifact in (
-                "CADWineLauncher.flatpak",
+                "cad-wine-launcher_${{ steps.release.outputs.version }}_x86_64.flatpak",
                 "cad-wine-launcher_${{ steps.release.outputs.version }}_amd64.deb",
-                "CADWineLauncher-${{ steps.release.outputs.version }}-sources.tar.gz",
+                "cad-wine-launcher_${{ steps.release.outputs.version }}_sources.tar.gz",
                 "SHA256SUMS"):
             self.assertIn(artifact, workflow)
 
