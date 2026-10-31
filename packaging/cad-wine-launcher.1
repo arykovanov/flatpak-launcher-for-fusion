@@ -1,4 +1,4 @@
-.TH CAD-WINE-LAUNCHER 1 "October 2026" "cad-wine-launcher 0.3.0"
+.TH CAD-WINE-LAUNCHER 1 "October 2026" "cad-wine-launcher 0.3.1"
 .SH NAME
 cad-wine-launcher \- Community CAD Launcher for Autodesk Fusion
 .SH SYNOPSIS
@@ -10,6 +10,8 @@ Runs a user-supplied Autodesk Fusion installer in a private Wine prefix and
 launches the installed application. Autodesk Fusion is not included or
 downloaded by this package. The launcher is unofficial and unaffiliated with
 Autodesk, Inc. The user must accept Autodesk's terms and have a valid entitlement.
+After the main Fusion process exits, the launcher stops the private Wine
+session so background Windows services cannot obstruct the next launch.
 .SH OPTIONS
 .TP
 .B --install

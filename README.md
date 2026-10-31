@@ -48,12 +48,38 @@ make
 Install the Flatpak bundle with:
 
 ```bash
-flatpak install --user ./dist/cad-wine-launcher_0.3.0_x86_64.flatpak
+flatpak install --user ./dist/cad-wine-launcher_0.3.1_x86_64.flatpak
 flatpak run org.community.CADWineLauncher
 ```
 
 On first run, follow the manual Autodesk download workflow described above and
 select the downloaded `.exe` file in the launcher's file chooser.
+
+## Update an existing installation
+
+To replace the installed launcher with a newer downloaded Flatpak bundle while
+keeping its private Fusion installation and settings:
+
+```bash
+flatpak install --user --reinstall \
+  ./cad-wine-launcher_0.3.1_x86_64.flatpak
+```
+
+To update Autodesk Fusion itself, sign in to your Autodesk Account, accept the
+applicable terms, download the current Windows installer, and run:
+
+```bash
+flatpak run org.community.CADWineLauncher --update
+```
+
+The launcher asks you to select the downloaded installer and updates Fusion in
+the existing Wine prefix. It does not remove your existing settings or shared
+files in `~/.autodesk_fusion`.
+
+After the main Fusion window exits, the launcher also shuts down the private
+Wine session. This removes WebView2, Edge Updater, and Wine service processes
+that would otherwise keep the Flatpak running and obstruct its next launch.
+This cleanup affects only this launcher's Wine prefix, not host applications.
 
 Most desktops register the included sign-in callback automatically. If the web
 browser does not return to Fusion after authentication, register the callback

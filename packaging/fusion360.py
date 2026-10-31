@@ -309,6 +309,36 @@ class Fusion:
         self.run_logged(["xdg-mime", "default", "cad-wine-launcher-callback.desktop",
                          "x-scheme-handler/adskidmgr"], timeout=30)
 
+    def shutdown_wine(self, debug=False):
+        """Stop every Wine process in this launcher's private prefix."""
+        wineserver = self.runtime / "bin/wineserver"
+        environment = self.environment(debug=debug)
+        output = {} if debug else {
+            "stdout": subprocess.DEVNULL,
+            "stderr": subprocess.DEVNULL,
+        }
+
+        def server(option, timeout):
+            return subprocess.run([str(wineserver), option], check=False,
+                                  env=environment, timeout=timeout, **output)
+
+        try:
+            # Fusion can leave WebView2/Edge updater and Windows service processes
+            # behind. Ask their shared Wine server to terminate the entire prefix.
+            server("-k", 10)
+            server("-w", 15)
+        except subprocess.TimeoutExpired:
+            try:
+                # The main Fusion process has already exited. If a helper ignores
+                # graceful shutdown, do not leave the Flatpak instance wedged.
+                server("-k9", 5)
+                server("-w", 5)
+            except (OSError, subprocess.TimeoutExpired) as error:
+                print(f"Warning: Wine processes did not stop: {error}", file=sys.stderr)
+        except OSError as error:
+            # Cleanup failure must not replace Fusion's own exit status.
+            print(f"Warning: Wine cleanup failed: {error}", file=sys.stderr)
+
     def install(self, update=False, installer=None, terms_accepted=False):
         with self.setup_session():
             if self.ready() and not update:
@@ -392,10 +422,19 @@ class Fusion:
             arguments = [callback]
         command = [str(self.runtime / "bin/wine"), str(executable), *arguments]
         # Never put callback URLs in logs: they may contain authorization tokens.
-        if debug and not callback:
-            return subprocess.call(command, cwd=executable.parent, env=self.environment(debug=True))
-        return subprocess.call(command, cwd=executable.parent, env=self.environment(),
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if callback:
+            return subprocess.call(command, cwd=executable.parent, env=self.environment(),
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            if debug:
+                return subprocess.call(command, cwd=executable.parent,
+                                       env=self.environment(debug=True))
+            return subprocess.call(command, cwd=executable.parent, env=self.environment(),
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        finally:
+            # This launcher supervises the complete private Wine session. Fusion's
+            # main process can exit while WebView2 and service helpers remain alive.
+            self.shutdown_wine(debug=debug)
 
 
 def main(argv=None):

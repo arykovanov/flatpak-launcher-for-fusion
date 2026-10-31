@@ -1,3 +1,9 @@
+cad-wine-launcher (0.3.1) unstable; urgency=medium
+
+  * Shutdown wine processes after Fusion36 exits
+
+ -- Alexander Rykovanov <rykovanov.as@gmail.com>  Sat, 31 Oct 2026 12:20:41 +0400
+
 cad-wine-launcher (0.3.0) unstable; urgency=medium
 
   * Provide a complete preconfigured Flatpak Wine environment.
@@ -5,5 +11,7 @@ cad-wine-launcher (0.3.0) unstable; urgency=medium
     terms flow, while automating the Wine-side installation.
   * Add the shared H: drive and GitHub-hosted release workflow.
   * Use lowercase, versioned release artifact filenames.
+  * Stop the private Wine session after Fusion exits so background services do
+    not leave the Flatpak running or block the next launch.
 
  -- Alexander Rykovanov <rykovanov.as@gmail.com>  Sat, 31 Oct 2026 12:00:00 +0400

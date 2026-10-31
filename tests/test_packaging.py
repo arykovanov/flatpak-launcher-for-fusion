@@ -8,6 +8,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tarfile
 import tempfile
@@ -244,6 +245,7 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual(len(installers), 2)
         self.assertIn("--quiet", installers[0])
         self.assertEqual(installers[1][-2:], ["--process", "update"])
+        self.assertEqual(installers[1].count("--process"), 1)
 
     def test_installer_failure_invalidates_previous_success(self):
         self.installed()
@@ -270,13 +272,44 @@ class PackagingTests(unittest.TestCase):
         self.installed()
         self.executable("Autodesk Identity Manager/AdskIdentityManager.exe")
         callback = "adskidmgr:/callback?token=secret&other=$(do-not-execute)"
-        with patch.object(module.subprocess, "call", return_value=0) as runner:
+        with patch.object(module.subprocess, "call", return_value=0) as runner, \
+                patch.object(self.app, "shutdown_wine") as shutdown:
             self.assertEqual(self.app.launch([], callback=callback), 0)
         command = runner.call_args.args[0]
         self.assertEqual(command[-1], callback)
         self.assertNotIn("shell", runner.call_args.kwargs)
         self.assertEqual(runner.call_args.kwargs["stdout"], subprocess.DEVNULL)
         self.assertIsNone(self.app.log_path)
+        shutdown.assert_not_called()
+
+    def test_main_launch_always_stops_private_wine_session(self):
+        self.installed()
+        with patch.object(module.subprocess, "call", return_value=7), \
+                patch.object(self.app, "shutdown_wine") as shutdown:
+            self.assertEqual(self.app.launch([]), 7)
+        shutdown.assert_called_once_with(debug=False)
+
+        with patch.object(module.subprocess, "call", side_effect=KeyboardInterrupt), \
+                patch.object(self.app, "shutdown_wine") as shutdown:
+            with self.assertRaises(KeyboardInterrupt):
+                self.app.launch([], debug=True)
+        shutdown.assert_called_once_with(debug=True)
+
+    def test_wine_watchdog_escalates_when_graceful_shutdown_hangs(self):
+        self.runtime()
+        calls = []
+
+        def fake_run(command, **kwargs):
+            calls.append(command)
+            if command[-1] == "-w" and calls.count(command) == 1:
+                raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+            return subprocess.CompletedProcess(command, 0)
+
+        with patch.object(module.subprocess, "run", side_effect=fake_run):
+            self.app.shutdown_wine()
+        options = [command[-1] for command in calls]
+        self.assertEqual(options, ["-k", "-w", "-k9", "-w"])
+        self.assertTrue(all(command[0].endswith("/wineserver") for command in calls))
 
     def test_bad_callback_is_rejected(self):
         self.installed()
@@ -330,7 +363,7 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("<name>Alexander Rykovanov</name>", metainfo)
 
     def test_release_version_and_artifact_names_are_consistent(self):
-        version = "0.3.0"
+        version = "0.3.1"
         control = (ROOT / "packaging/control").read_text()
         changelog = (ROOT / "packaging/changelog").read_text()
         metainfo = (ROOT / "flatpak/org.community.CADWineLauncher.metainfo.xml").read_text()
@@ -341,6 +374,65 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("cad-wine-launcher_$(VERSION)_x86_64.flatpak", makefile)
         self.assertIn("cad-wine-launcher_$(VERSION)_amd64.deb", makefile)
         self.assertIn("cad-wine-launcher_$(VERSION)_sources.tar.gz", makefile)
+
+    def test_version_bump_script_updates_current_references_and_preserves_history(self):
+        fixture = self.base / "version-fixture"
+        current = (ROOT / "packaging/control").read_text().split("Version: ", 1)[1].splitlines()[0]
+        major, minor, patch_version = (int(part) for part in current.split("."))
+        next_version = f"{major}.{minor}.{patch_version + 1}"
+        files = {
+            "README.md": f"bundle {current}\n",
+            "packaging/README.md": f"release v{current} and bundle {current}\n",
+            "packaging/control": (
+                f"Package: cad-wine-launcher\nVersion: {current}\n"
+                "Maintainer: Alexander Rykovanov <rykovanov.as@gmail.com>\n"
+            ),
+            "packaging/cad-wine-launcher.1": f"cad-wine-launcher {current}\n",
+            "packaging/changelog": (
+                f"cad-wine-launcher ({current}) unstable; urgency=medium\n"
+            ),
+            "source-offer/README.md": f"source {current}\n",
+            "tests/test_packaging.py": f'version = "{current}"\n',
+            ".github/workflows/release.yml": f"example v{current}\n",
+            "flatpak/org.community.CADWineLauncher.metainfo.xml": (
+                f"<releases>\n  <release version=\"{current}\" date=\"2026-10-31\"/>\n"
+                "</releases>\n"
+            ),
+        }
+        for name, contents in files.items():
+            target = fixture / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(contents)
+        script = fixture / "scripts/bump-version.sh"
+        script.parent.mkdir(parents=True)
+        shutil.copy2(ROOT / "scripts/bump-version.sh", script)
+
+        result = subprocess.run(
+            [script, next_version, "Fix Wine lifecycle cleanup."],
+            cwd=fixture, capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f"Version increased from {current} to {next_version}", result.stdout)
+        for name in (
+                "README.md", "packaging/README.md", "packaging/control",
+                "packaging/cad-wine-launcher.1", "source-offer/README.md",
+                "tests/test_packaging.py", ".github/workflows/release.yml"):
+            text = (fixture / name).read_text()
+            self.assertIn(next_version, text)
+            self.assertNotIn(current, text)
+        changelog = (fixture / "packaging/changelog").read_text()
+        self.assertTrue(changelog.startswith(f"cad-wine-launcher ({next_version})"))
+        self.assertIn("Fix Wine lifecycle cleanup.", changelog)
+        self.assertIn(f"cad-wine-launcher ({current})", changelog)
+        metainfo = (fixture / "flatpak/org.community.CADWineLauncher.metainfo.xml").read_text()
+        self.assertIn(f'<release version="{next_version}"', metainfo)
+        self.assertIn(f'<release version="{current}"', metainfo)
+
+        control_before = (fixture / "packaging/control").read_text()
+        invalid = subprocess.run([script, f"{major}.{minor}"], cwd=fixture,
+                                 capture_output=True, text=True)
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertEqual((fixture / "packaging/control").read_text(), control_before)
 
     def test_readme_documents_manual_autodesk_download(self):
         for path in (ROOT / "README.md", ROOT / "packaging/README.md"):
@@ -353,6 +445,8 @@ class PackagingTests(unittest.TestCase):
             self.assertIn("complete, preconfigured", text)
             self.assertIn("do not need to", text)
             self.assertIn("Wine manually", text)
+            self.assertIn("flatpak install --user --reinstall", text)
+            self.assertIn("flatpak run org.community.CADWineLauncher --update", text)
 
     def test_release_workflow_builds_and_publishes_on_github_runner(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()

@@ -1,5 +1,5 @@
 Package: cad-wine-launcher
-Version: 0.3.0
+Version: 0.3.1
 Section: contrib/graphics
 Priority: optional
 Architecture: amd64

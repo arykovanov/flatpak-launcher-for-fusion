@@ -69,9 +69,9 @@ make
 
 The default `all` target builds:
 
-- `dist/cad-wine-launcher_0.3.0_x86_64.flatpak`
-- `dist/cad-wine-launcher_0.3.0_amd64.deb`
-- `dist/cad-wine-launcher_0.3.0_sources.tar.gz`
+- `dist/cad-wine-launcher_0.3.1_x86_64.flatpak`
+- `dist/cad-wine-launcher_0.3.1_amd64.deb`
+- `dist/cad-wine-launcher_0.3.1_sources.tar.gz`
 
 `make clean` removes only this project's generated `build/` and `dist/`
 directories. Individual targets are `make flatpak`, `make deb`,
@@ -80,7 +80,7 @@ directories. Individual targets are `make flatpak`, `make deb`,
 ## Install the Flatpak file
 
 ```bash
-flatpak install --user ./dist/cad-wine-launcher_0.3.0_x86_64.flatpak
+flatpak install --user ./dist/cad-wine-launcher_0.3.1_x86_64.flatpak
 flatpak run org.community.CADWineLauncher
 ```
 
@@ -91,6 +91,37 @@ does not return to Fusion, register the callback once on the host:
 ```bash
 xdg-mime default org.community.CADWineLauncher.Callback.desktop \
   x-scheme-handler/adskidmgr
+```
+
+### Update the Flatpak launcher
+
+Install a newer downloaded bundle over the existing launcher:
+
+```bash
+flatpak install --user --reinstall \
+  ./cad-wine-launcher_0.3.1_x86_64.flatpak
+```
+
+Do not add `--delete-data`: the existing private Wine prefix, Fusion
+installation, settings, and caches remain available to the updated launcher.
+
+### Update Autodesk Fusion
+
+Sign in to your Autodesk Account, accept the applicable terms, and download
+the current Windows installer. Then update Fusion in its existing Wine prefix:
+
+```bash
+flatpak run org.community.CADWineLauncher --update
+```
+
+The launcher opens a file chooser for the downloaded installer. The update
+retains the existing prefix, settings, and shared `~/.autodesk_fusion` folder.
+For an explicit noninteractive invocation after reviewing the terms:
+
+```bash
+flatpak run org.community.CADWineLauncher --update \
+  --installer /path/to/your/Autodesk-installer.exe \
+  --accept-autodesk-terms
 ```
 
 On first run, the launcher displays its unofficial status, links Autodesk's
@@ -106,8 +137,8 @@ flatpak run org.community.CADWineLauncher --install \
 ```
 
 Interactive confirmation is the default. For automation only after reviewing
-the terms, add `--accept-autodesk-terms`. The same flow applies to `--update`.
-Other commands are `--status`, `--dry-run`, and `--debug`.
+the terms, add `--accept-autodesk-terms`. Other commands are `--status`,
+`--dry-run`, and `--debug`.
 
 The launcher copies the selected installer into private temporary storage only
 while Wine executes it and then deletes that copy. It never deletes the
@@ -130,6 +161,12 @@ Flatpak's private application data.
 
 The app also has network, GPU, audio, X11/IPC, and multiarch access. X11
 weakens isolation; Flatpak is not a VM or a complete security boundary.
+
+The launcher supervises Fusion's private Wine session. When the main Fusion
+process exits, it shuts down that prefix's Wine server and any remaining
+WebView2, Edge Updater, or Windows service processes. Browser sign-in callback
+launches do not perform this cleanup because they can occur while Fusion is
+still running. No Flatpak host-control permission is required.
 
 The user-selected installer is normally exposed through Flatpak's document
 portal. To grant another model directory deliberately:
@@ -162,7 +199,7 @@ Do not substitute a broader `.var/app` path in the removal command.
 ## Debian alternative
 
 ```bash
-sudo apt install ./dist/cad-wine-launcher_0.3.0_amd64.deb
+sudo apt install ./dist/cad-wine-launcher_0.3.1_amd64.deb
 cad-wine-launcher
 ```
 
@@ -200,7 +237,20 @@ entirely on a GitHub-hosted Ubuntu runner. It starts from a clean repository
 checkout; files from a developer's local `build/` or `dist/` directory are
 never used.
 
-The workflow runs for a pushed semantic-version tag such as `v0.3.0`, or it can
+Increase the version consistently before preparing a release:
+
+```bash
+./scripts/bump-version.sh 0.3.1 \
+  "Stop leftover Wine processes after Fusion exits."
+make test
+```
+
+The script requires a greater `MAJOR.MINOR.PATCH` version. It updates current
+package, documentation, source-offer, workflow-example, and test references;
+adds new changelog and AppStream release entries; and preserves the entries for
+older releases. It does not commit, tag, push, build, or publish anything.
+
+The workflow runs for a pushed semantic-version tag such as `v0.3.1`, or it can
 be started from the Actions page with **Run workflow** and the same tag as its
 input. The tag must exactly match the version in `packaging/changelog`.
 The tagged commit must already be present on the repository's default branch;
@@ -211,17 +261,17 @@ For example:
 
 ```bash
 git push origin main
-git tag v0.3.0
-git push origin v0.3.0
+git tag v0.3.1
+git push origin v0.3.1
 ```
 
 The runner installs the pinned Flatpak runtime, runs the tests and metadata
 validators, executes `make clean` followed by `make all`, and verifies
 `SHA256SUMS`. It then publishes these assets to the GitHub Release:
 
-- `cad-wine-launcher_0.3.0_x86_64.flatpak`
-- `cad-wine-launcher_0.3.0_amd64.deb`
-- `cad-wine-launcher_0.3.0_sources.tar.gz`
+- `cad-wine-launcher_0.3.1_x86_64.flatpak`
+- `cad-wine-launcher_0.3.1_amd64.deb`
+- `cad-wine-launcher_0.3.1_sources.tar.gz`
 - `SHA256SUMS`
 
 GitHub also generates its standard source-code `.zip` and `.tar.gz` archives

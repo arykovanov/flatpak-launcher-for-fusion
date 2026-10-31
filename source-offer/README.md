@@ -1,9 +1,9 @@
-# Corresponding source for Community CAD Launcher for Autodesk Fusion 0.3.0
+# Corresponding source for Community CAD Launcher for Autodesk Fusion 0.3.1
 
 This directory identifies the complete corresponding source used by the
 free-software components in the local Flatpak bundle. Run
 `./build-source-bundle.sh` (or `make source-bundle`) to create
-`dist/cad-wine-launcher_0.3.0_sources.tar.gz`, containing the verified source
+`dist/cad-wine-launcher_0.3.1_sources.tar.gz`, containing the verified source
 archives, launcher source, build manifest, patch, licenses, and this document.
 
 The Flatpak embeds no Autodesk software. Autodesk Fusion and its installer are
